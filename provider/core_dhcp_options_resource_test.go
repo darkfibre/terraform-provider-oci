@@ -80,6 +80,19 @@ func (s *ResourceCoreDHCPOptionsTestSuite) SetupTest() {
 			type = "SearchDomain"
 			search_domain_names = [ "test.com" ]
 		}
+	}
+
+	resource "oci_core_dhcp_options" "default" {
+		default_id = "${oci_core_virtual_network.t.default_dhcp_options_id}"
+		options {
+			type = "DomainNameServer"
+			server_type = "CustomDnsServer"
+			custom_dns_servers = [  "8.8.4.4", "8.8.8.8" ]
+		}
+		options {
+			type = "SearchDomain"
+			search_domain_names = [ "test.com" ]
+		}
 	}`
 }
 
@@ -109,6 +122,10 @@ func (s *ResourceCoreDHCPOptionsTestSuite) TestAccResourceCoreDHCPOptions_basic(
 					resource.TestCheckResourceAttr("oci_core_dhcp_options.opt4", "options.0.type", "DomainNameServer"),
 					resource.TestCheckResourceAttr("oci_core_dhcp_options.opt4", "options.0.server_type", "CustomDnsServer"),
 					resource.TestCheckResourceAttr("oci_core_dhcp_options.opt4", "options.1.type", "SearchDomain"),
+
+					resource.TestCheckResourceAttr("oci_core_dhcp_options.default", "options.0.type", "DomainNameServer"),
+					resource.TestCheckResourceAttr("oci_core_dhcp_options.default", "options.0.server_type", "CustomDnsServer"),
+					resource.TestCheckResourceAttr("oci_core_dhcp_options.default", "options.1.type", "SearchDomain"),
 				),
 			},
 		},

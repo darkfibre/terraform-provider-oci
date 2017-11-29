@@ -21,9 +21,10 @@ func DHCPOptionsResource() *schema.Resource {
 		Delete:   deleteDHCPOptions,
 		Schema: map[string]*schema.Schema{
 			"compartment_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -33,6 +34,12 @@ func DHCPOptionsResource() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"default_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"compartment_id", "vcn_id"},
+				ForceNew:      true,
 			},
 			"options": {
 				Type:     schema.TypeList,
@@ -69,9 +76,10 @@ func DHCPOptionsResource() *schema.Resource {
 				Computed: true,
 			},
 			"vcn_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
 			},
 		},
 	}
@@ -139,6 +147,14 @@ func (s *DHCPOptionsResourceCrud) State() string {
 }
 
 func (s *DHCPOptionsResourceCrud) Create() (e error) {
+	// If we are creating a default resource, then don't have to
+	// actually create it. Just set the ID and update it.
+	if defaultId := s.D.Get("default_id").(string); defaultId != "" {
+		s.D.SetId(defaultId)
+		e = s.Update()
+		return
+	}
+
 	compartmentID := s.D.Get("compartment_id").(string)
 	vcnID := s.D.Get("vcn_id").(string)
 
@@ -154,6 +170,15 @@ func (s *DHCPOptionsResourceCrud) Get() (e error) {
 	res, e := s.Client.GetDHCPOptions(s.D.Id())
 	if e == nil {
 		s.Res = res
+
+		// If this is a default resource that we removed earlier, then
+		// we need to assume that the parent resource will remove it
+		// and notify terraform of it. Otherwise, terraform will
+		// see that the resource is still available and error out
+		if s.D.Get("default_id") != "" &&
+			s.D.Get("state") == baremetal.ResourceTerminated {
+			s.Res.State = baremetal.ResourceTerminated
+		}
 	}
 	return
 }
@@ -187,6 +212,13 @@ func (s *DHCPOptionsResourceCrud) SetData() {
 }
 
 func (s *DHCPOptionsResourceCrud) Delete() (e error) {
+	if s.D.Get("default_id") != "" {
+		// We can't actually delete a default resource.
+		// Instead, mark it as deleted.
+		s.D.Set("state", baremetal.ResourceTerminated)
+		return
+	}
+
 	return s.Client.DeleteDHCPOptions(s.D.Id(), nil)
 }
 

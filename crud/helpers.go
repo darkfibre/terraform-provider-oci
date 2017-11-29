@@ -338,3 +338,15 @@ func FilterMissingResourceError(sync ResourceVoider, err *error) {
 func EqualIgnoreCaseSuppressDiff(key string, old string, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(old, new)
 }
+
+func DefaultResourceSuppressDiff(key string, old string, new string, d *schema.ResourceData) bool {
+	/*
+	 * If we have a default resource, then certain "ForceNew" values such as compartment_id and vcn_id should
+	 * not be specified via config. Even so, Terraform may consider the absence of these values as a diff and
+	 * cause us to unnecessarily delete/create these default resources.
+	 *
+	 * To avoid this, we should suppress diffs for such values if we have default resources.
+	 */
+	_, ok := d.GetOk("default_id")
+	return ok
+}

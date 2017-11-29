@@ -57,9 +57,10 @@ func SecurityListResource() *schema.Resource {
 		Delete:   deleteSecurityList,
 		Schema: map[string]*schema.Schema{
 			"compartment_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -94,6 +95,12 @@ func SecurityListResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"default_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"compartment_id", "vcn_id"},
+				ForceNew:      true,
+			},
 			"ingress_security_rules": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -127,9 +134,10 @@ func SecurityListResource() *schema.Resource {
 				Computed: true,
 			},
 			"vcn_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
 			},
 		},
 	}
@@ -197,6 +205,14 @@ func (s *SecurityListResourceCrud) State() string {
 }
 
 func (s *SecurityListResourceCrud) Create() (e error) {
+	// If we are creating a default resource, then don't have to
+	// actually create it. Just set the ID and update it.
+	if defaultId := s.D.Get("default_id").(string); defaultId != "" {
+		s.D.SetId(defaultId)
+		e = s.Update()
+		return
+	}
+
 	compartmentID := s.D.Get("compartment_id").(string)
 	egress := s.buildEgressRules()
 	ingress := s.buildIngressRules()
@@ -214,6 +230,15 @@ func (s *SecurityListResourceCrud) Get() (e error) {
 	res, e := s.Client.GetSecurityList(s.D.Id())
 	if e == nil {
 		s.Res = res
+
+		// If this is a default resource that we removed earlier, then
+		// we need to assume that the parent resource will remove it
+		// and notify terraform of it. Otherwise, terraform will
+		// see that the resource is still available and error out
+		if s.D.Get("default_id") != "" &&
+			s.D.Get("state") == baremetal.ResourceTerminated {
+			s.Res.State = baremetal.ResourceTerminated
+		}
 	}
 	return
 }
@@ -278,6 +303,13 @@ func (s *SecurityListResourceCrud) SetData() {
 }
 
 func (s *SecurityListResourceCrud) Delete() (e error) {
+	if s.D.Get("default_id") != "" {
+		// We can't actually delete a default resource.
+		// Instead, mark it as deleted.
+		s.D.Set("state", baremetal.ResourceTerminated)
+		return
+	}
+
 	return s.Client.DeleteSecurityList(s.D.Id(), nil)
 }
 
