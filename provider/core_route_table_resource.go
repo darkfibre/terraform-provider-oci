@@ -12,6 +12,19 @@ import (
 	"github.com/oracle/terraform-provider-oci/crud"
 )
 
+var routeRules = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"cidr_block": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"network_entity_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	},
+}
+
 func RouteTableResource() *schema.Resource {
 	return &schema.Resource{
 		Importer: &schema.ResourceImporter{
@@ -44,21 +57,15 @@ func RouteTableResource() *schema.Resource {
 				ConflictsWith: []string{"compartment_id", "vcn_id"},
 				ForceNew:      true,
 			},
+			"default_route_rules": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     routeRules,
+			},
 			"route_rules": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"network_entity_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
+				Elem:     routeRules,
 			},
 			"time_modified": {
 				Type:     schema.TypeString,
@@ -147,6 +154,12 @@ func (s *RouteTableResourceCrud) Create() (e error) {
 	// If we are creating a default resource, then don't have to
 	// actually create it. Just set the ID and update it.
 	if defaultId := s.D.Get("default_id").(string); defaultId != "" {
+		var res *baremetal.RouteTable
+		if res, e = s.Client.GetRouteTable(defaultId); e != nil {
+			return
+		}
+		s.D.Set("default_route_rules", routeRulesToMapArray(res.RouteRules))
+
 		s.D.SetId(defaultId)
 		e = s.Update()
 		return
@@ -164,6 +177,7 @@ func (s *RouteTableResourceCrud) Create() (e error) {
 		return e
 	}
 	s.Res, e = s.Client.CreateRouteTable(compartmentID, vcnID, rr, opts)
+	s.D.Set("default_route_rules", nil)
 
 	return
 }
@@ -202,19 +216,23 @@ func (s *RouteTableResourceCrud) Update() (e error) {
 	return
 }
 
-func (s *RouteTableResourceCrud) SetData() {
-	s.D.Set("compartment_id", s.Res.CompartmentID)
-	s.D.Set("display_name", s.Res.DisplayName)
-
-	rules := []map[string]interface{}{}
-	for _, val := range s.Res.RouteRules {
+func routeRulesToMapArray(rules []baremetal.RouteRule) (res []map[string]interface{}) {
+	for _, val := range rules {
 		rule := map[string]interface{}{
 			"cidr_block":        val.CidrBlock,
 			"network_entity_id": val.NetworkEntityID,
 		}
-		rules = append(rules, rule)
+		res = append(res, rule)
 	}
-	s.D.Set("route_rules", rules)
+
+	return
+}
+
+func (s *RouteTableResourceCrud) SetData() {
+	s.D.Set("compartment_id", s.Res.CompartmentID)
+	s.D.Set("display_name", s.Res.DisplayName)
+
+	s.D.Set("route_rules", routeRulesToMapArray(s.Res.RouteRules))
 
 	s.D.Set("time_modified", s.Res.TimeModified.String())
 	s.D.Set("state", s.Res.State)
@@ -224,9 +242,10 @@ func (s *RouteTableResourceCrud) SetData() {
 func (s *RouteTableResourceCrud) Delete() (e error) {
 	if s.D.Get("default_id") != "" {
 		// We can't actually delete a default resource.
-		// Instead, remove all the route rules first and mark it as deleted.
-		s.D.Set("route_rules", nil)
+		// Instead, revert it to default settings and mark it as terminated
+		s.D.Set("route_rules", s.D.Get("default_route_rules"))
 		e = s.Update()
+
 		s.D.Set("state", baremetal.ResourceTerminated)
 		return
 	}
