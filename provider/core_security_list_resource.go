@@ -45,48 +45,6 @@ var icmpSchema = &schema.Schema{
 	},
 }
 
-var egressRules = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"destination": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"icmp_options": icmpSchema,
-		"protocol": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"tcp_options": transportSchema,
-		"udp_options": transportSchema,
-		"stateless": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
-	},
-}
-
-var ingressRules = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"icmp_options": icmpSchema,
-		"protocol": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"source": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"tcp_options": transportSchema,
-		"udp_options": transportSchema,
-		"stateless": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
-	},
-}
-
 func SecurityListResource() *schema.Resource {
 	return &schema.Resource{
 		Importer: &schema.ResourceImporter{
@@ -109,15 +67,29 @@ func SecurityListResource() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"default_egress_security_rules": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     egressRules,
-			},
 			"egress_security_rules": {
 				Type:     schema.TypeList,
 				Required: true,
-				Elem:     egressRules,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"icmp_options": icmpSchema,
+						"protocol": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"tcp_options": transportSchema,
+						"udp_options": transportSchema,
+						"stateless": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"id": {
 				Type:     schema.TypeString,
@@ -129,15 +101,29 @@ func SecurityListResource() *schema.Resource {
 				ConflictsWith: []string{"compartment_id", "vcn_id"},
 				ForceNew:      true,
 			},
-			"default_ingress_security_rules": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     ingressRules,
-			},
 			"ingress_security_rules": {
 				Type:     schema.TypeList,
 				Required: true,
-				Elem:     ingressRules,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"icmp_options": icmpSchema,
+						"protocol": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"source": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"tcp_options": transportSchema,
+						"udp_options": transportSchema,
+						"stateless": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -222,13 +208,6 @@ func (s *SecurityListResourceCrud) Create() (e error) {
 	// If we are creating a default resource, then don't have to
 	// actually create it. Just set the ID and update it.
 	if defaultId := s.D.Get("default_id").(string); defaultId != "" {
-		var res *baremetal.SecurityList
-		if res, e = s.Client.GetSecurityList(defaultId); e != nil {
-			return
-		}
-		s.D.Set("default_egress_security_rules", egressRulesToMapArray(res.EgressSecurityRules))
-		s.D.Set("default_ingress_security_rules", ingressRulesToMapArray(res.IngressSecurityRules))
-
 		s.D.SetId(defaultId)
 		e = s.Update()
 		return
@@ -243,8 +222,6 @@ func (s *SecurityListResourceCrud) Create() (e error) {
 	opts.DisplayName = s.D.Get("display_name").(string)
 
 	s.Res, e = s.Client.CreateSecurityList(compartmentID, vcnID, egress, ingress, opts)
-	s.D.Set("default_ingress_security_rules", nil)
-	s.D.Set("default_egress_security_rules", nil)
 
 	return
 }
@@ -284,8 +261,12 @@ func (s *SecurityListResourceCrud) Update() (e error) {
 	return
 }
 
-func egressRulesToMapArray(rules []baremetal.EgressSecurityRule) (res []map[string]interface{}) {
-	for _, egressRule := range rules {
+func (s *SecurityListResourceCrud) SetData() {
+	s.D.Set("compartment_id", s.Res.CompartmentID)
+	s.D.Set("display_name", s.Res.DisplayName)
+
+	confEgressRules := []map[string]interface{}{}
+	for _, egressRule := range s.Res.EgressSecurityRules {
 		confEgressRule := map[string]interface{}{}
 		confEgressRule["destination"] = egressRule.Destination
 		confEgressRule = buildConfRule(
@@ -296,14 +277,12 @@ func egressRulesToMapArray(rules []baremetal.EgressSecurityRule) (res []map[stri
 			egressRule.UDPOptions,
 			&egressRule.IsStateless,
 		)
-		res = append(res, confEgressRule)
+		confEgressRules = append(confEgressRules, confEgressRule)
 	}
+	s.D.Set("egress_security_rules", confEgressRules)
 
-	return
-}
-
-func ingressRulesToMapArray(rules []baremetal.IngressSecurityRule) (res []map[string]interface{}) {
-	for _, ingressRule := range rules {
+	confIngressRules := []map[string]interface{}{}
+	for _, ingressRule := range s.Res.IngressSecurityRules {
 		confIngressRule := map[string]interface{}{}
 		confIngressRule["source"] = ingressRule.Source
 		confIngressRule = buildConfRule(
@@ -314,18 +293,9 @@ func ingressRulesToMapArray(rules []baremetal.IngressSecurityRule) (res []map[st
 			ingressRule.UDPOptions,
 			&ingressRule.IsStateless,
 		)
-		res = append(res, confIngressRule)
+		confIngressRules = append(confIngressRules, confIngressRule)
 	}
-
-	return
-}
-
-func (s *SecurityListResourceCrud) SetData() {
-	s.D.Set("compartment_id", s.Res.CompartmentID)
-	s.D.Set("display_name", s.Res.DisplayName)
-
-	s.D.Set("egress_security_rules", egressRulesToMapArray(s.Res.EgressSecurityRules))
-	s.D.Set("ingress_security_rules", ingressRulesToMapArray(s.Res.IngressSecurityRules))
+	s.D.Set("ingress_security_rules", confIngressRules)
 
 	s.D.Set("state", s.Res.State)
 	s.D.Set("time_created", s.Res.TimeCreated.String())
@@ -335,11 +305,7 @@ func (s *SecurityListResourceCrud) SetData() {
 func (s *SecurityListResourceCrud) Delete() (e error) {
 	if s.D.Get("default_id") != "" {
 		// We can't actually delete a default resource.
-		// Instead, revert it to default settings and mark it as terminated
-		s.D.Set("egress_security_rules", s.D.Get("default_egress_security_rules"))
-		s.D.Set("ingress_security_rules", s.D.Get("default_ingress_security_rules"))
-		e = s.Update()
-
+		// Instead, mark it as deleted.
 		s.D.Set("state", baremetal.ResourceTerminated)
 		return
 	}

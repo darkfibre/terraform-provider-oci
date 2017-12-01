@@ -9,29 +9,6 @@ import (
 	"github.com/oracle/terraform-provider-oci/crud"
 )
 
-var dhcpOptions = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"type": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"custom_dns_servers": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"server_type": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"search_domain_names": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-	},
-}
-
 func DHCPOptionsResource() *schema.Resource {
 	return &schema.Resource{
 		Importer: &schema.ResourceImporter{
@@ -64,15 +41,31 @@ func DHCPOptionsResource() *schema.Resource {
 				ConflictsWith: []string{"compartment_id", "vcn_id"},
 				ForceNew:      true,
 			},
-			"default_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     dhcpOptions,
-			},
 			"options": {
 				Type:     schema.TypeList,
 				Required: true,
-				Elem:     dhcpOptions,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"custom_dns_servers": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"server_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"search_domain_names": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -157,14 +150,6 @@ func (s *DHCPOptionsResourceCrud) Create() (e error) {
 	// If we are creating a default resource, then don't have to
 	// actually create it. Just set the ID and update it.
 	if defaultId := s.D.Get("default_id").(string); defaultId != "" {
-		// We query the default DHCP options; this can be restored later
-		// when we try to delete a default resource.
-		var res *baremetal.DHCPOptions
-		if res, e = s.Client.GetDHCPOptions(defaultId); e != nil {
-			return
-		}
-		s.D.Set("default_options", optionsToMapArray(res.Options))
-
 		s.D.SetId(defaultId)
 		e = s.Update()
 		return
@@ -177,7 +162,6 @@ func (s *DHCPOptionsResourceCrud) Create() (e error) {
 	opts.DisplayName = s.D.Get("display_name").(string)
 
 	s.Res, e = s.Client.CreateDHCPOptions(compartmentID, vcnID, s.buildEntities(), opts)
-	s.D.Set("default_options", nil)
 
 	return
 }
@@ -207,25 +191,21 @@ func (s *DHCPOptionsResourceCrud) Update() (e error) {
 	return
 }
 
-func optionsToMapArray(options []baremetal.DHCPDNSOption) (res []map[string]interface{}) {
-	for _, val := range options {
+func (s *DHCPOptionsResourceCrud) SetData() {
+	s.D.Set("compartment_id", s.Res.CompartmentID)
+	s.D.Set("display_name", s.Res.DisplayName)
+
+	entities := []map[string]interface{}{}
+	for _, val := range s.Res.Options {
 		entity := map[string]interface{}{
 			"type":                val.Type,
 			"custom_dns_servers":  val.CustomDNSServers,
 			"server_type":         val.ServerType,
 			"search_domain_names": val.SearchDomainNames,
 		}
-		res = append(res, entity)
+		entities = append(entities, entity)
 	}
-
-	return
-}
-
-func (s *DHCPOptionsResourceCrud) SetData() {
-	s.D.Set("compartment_id", s.Res.CompartmentID)
-	s.D.Set("display_name", s.Res.DisplayName)
-
-	s.D.Set("options", optionsToMapArray(s.Res.Options))
+	s.D.Set("options", entities)
 
 	s.D.Set("state", s.Res.State)
 	s.D.Set("time_created", s.Res.TimeCreated.String())
@@ -234,10 +214,7 @@ func (s *DHCPOptionsResourceCrud) SetData() {
 func (s *DHCPOptionsResourceCrud) Delete() (e error) {
 	if s.D.Get("default_id") != "" {
 		// We can't actually delete a default resource.
-		// Instead, revert it to default settings and mark it as terminated
-		s.D.Set("options", s.D.Get("default_options"))
-		e = s.Update()
-
+		// Instead, mark it as deleted.
 		s.D.Set("state", baremetal.ResourceTerminated)
 		return
 	}

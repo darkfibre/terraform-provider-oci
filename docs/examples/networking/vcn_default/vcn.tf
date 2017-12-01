@@ -47,6 +47,7 @@ resource "oci_core_route_table" "route-table1" {
 
 resource "oci_core_dhcp_options" "default-dhcp-options" {
   default_id = "${oci_core_virtual_network.vcn1.default_dhcp_options_id}"
+  display_name = "default-dhcp-options"
 
   // required
   options {
