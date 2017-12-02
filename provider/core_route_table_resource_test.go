@@ -58,7 +58,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 					}
 
 					resource "oci_core_route_table" "default" {
-						default_id = "${oci_core_virtual_network.t.default_route_table_id}"
+						manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
 					}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(s.ResourceName, "display_name"),
@@ -79,7 +79,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 						}
 					}
 					resource "oci_core_route_table" "default" {
-						default_id = "${oci_core_virtual_network.t.default_route_table_id}"
+						manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
 						route_rules {
 							cidr_block = "0.0.0.0/0"
 							network_entity_id = "${oci_core_internet_gateway.internet-gateway1.id}"
@@ -113,7 +113,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 						}
 					}
 					resource "oci_core_route_table" "default" {
-						default_id = "${oci_core_virtual_network.t.default_route_table_id}"
+						manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
 						display_name = "default-tf-route-table"
 						route_rules {
 							cidr_block = "0.0.0.0/0"

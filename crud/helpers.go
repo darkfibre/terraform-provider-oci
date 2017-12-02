@@ -347,6 +347,6 @@ func DefaultResourceSuppressDiff(key string, old string, new string, d *schema.R
 	 *
 	 * To avoid this, we should suppress diffs for such values if we have default resources.
 	 */
-	_, ok := d.GetOk("default_id")
+	_, ok := d.GetOk("manage_default_resource_id")
 	return ok
 }

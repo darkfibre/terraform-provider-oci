@@ -27,7 +27,7 @@ resource "oci_core_internet_gateway" "ig1" {
 }
 
 resource "oci_core_route_table" "default-route-table" {
-  default_id = "${oci_core_virtual_network.vcn1.default_route_table_id}"
+  manage_default_resource_id = "${oci_core_virtual_network.vcn1.default_route_table_id}"
   display_name = "default-route-table"
   route_rules {
     cidr_block = "0.0.0.0/0"
@@ -46,7 +46,7 @@ resource "oci_core_route_table" "route-table1" {
 }
 
 resource "oci_core_dhcp_options" "default-dhcp-options" {
-  default_id = "${oci_core_virtual_network.vcn1.default_dhcp_options_id}"
+  manage_default_resource_id = "${oci_core_virtual_network.vcn1.default_dhcp_options_id}"
   display_name = "default-dhcp-options"
 
   // required
@@ -81,7 +81,7 @@ resource "oci_core_dhcp_options" "dhcp-options1" {
 }
 
 resource "oci_core_security_list" "default-security-list" {
-  default_id = "${oci_core_virtual_network.vcn1.default_security_list_id}"
+  manage_default_resource_id = "${oci_core_virtual_network.vcn1.default_security_list_id}"
   display_name = "default-security-list"
 
   // allow outbound tcp traffic on all ports

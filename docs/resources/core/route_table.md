@@ -28,10 +28,12 @@ resource "oci_core_route_table" "t" {
 
 The following arguments are supported:
 
-* `compartment_id` - (Required) The OCID of the compartment.
+* `compartment_id` - (Required) The OCID of the compartment containing the route table. Do not specify with `manage_default_resource_id`.
+* `vcn_id` - (Required) The OCID of the VCN the route table list belongs to. Do not specify with `manage_default_resource_id`.
+* `manage_default_resource_id` - (Optional) The OCID of a [default route table resource](https://github.com/oracle/terraform-provider-oci/blob/master/docs/Managing%20Default%20Resources.md) to manage.
+Do not specify with `vcn_id` and `compartment_id`.
 * `display_name` - (Optional) A user-friendly name. Does not have to be unique, and it's changeable. Avoid entering confidential information.
 * `route_rules` - (Required) The collection of rules for routing destination IPs to network devices.
-* `vcn_id` - (Required) The OCID of the VCN the route table list belongs to.
 
 ## Attributes reference
 

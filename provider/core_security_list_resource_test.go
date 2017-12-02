@@ -86,7 +86,7 @@ func (s *ResourceCoreSecurityListTestSuite) TestAccResourceCoreSecurityList_basi
 					}
 
 					resource "oci_core_security_list" "default" {
-						default_id = "${oci_core_virtual_network.t.default_security_list_id}"
+						manage_default_resource_id = "${oci_core_virtual_network.t.default_security_list_id}"
 						display_name = "default-tf-security_list"
 						egress_security_rules = [{
 							destination = "0.0.0.0/0"
@@ -173,7 +173,7 @@ func (s *ResourceCoreSecurityListTestSuite) TestAccResourceCoreSecurityList_basi
 					}
 
 					resource "oci_core_security_list" "default" {
-						default_id = "${oci_core_virtual_network.t.default_security_list_id}"
+						manage_default_resource_id = "${oci_core_virtual_network.t.default_security_list_id}"
 						display_name = "default-tf-security_list-updated"
 						egress_security_rules = [{
 							destination = "0.0.0.0/0"
@@ -244,7 +244,7 @@ func (s *ResourceCoreSecurityListTestSuite) TestAccResourceCoreSecurityList_basi
 					}
 
 					resource "oci_core_security_list" "default" {
-						default_id = "${oci_core_virtual_network.t.default_security_list_id}"
+						manage_default_resource_id = "${oci_core_virtual_network.t.default_security_list_id}"
 						display_name = "default-tf-security_list-updated"
 						egress_security_rules = []
 						ingress_security_rules = []

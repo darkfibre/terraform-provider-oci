@@ -57,11 +57,13 @@ resource "oci_core_security_list" "t" {
 
 The following arguments are supported:
 
-* `compartment_id` - (Required) The OCID of the compartment to contain the security list.
-* `display_name` - (Optional) The OCID of the VCN.
+* `compartment_id` - (Required) The OCID of the compartment to contain the security list. Do not specify with `manage_default_resource_id`.
+* `vcn_id` - (Required) The OCID of the VCN the security list belongs to.. Do not specify with `manage_default_resource_id`.
+* `manage_default_resource_id` - (Optional) The OCID of a [default security list resource](https://github.com/oracle/terraform-provider-oci/blob/master/docs/Managing%20Default%20Resources.md) to manage.
+Do not specify with `vcn_id` and `compartment_id`.
+* `display_name` - (Optional) A user-friendly name. Does not have to be unique, and it's changeable. Avoid entering confidential information.
 * `egress_security_rules` - (Required) Rules for allowing egress IP packets. [EgressSecurityRule API Docs](https://docs.us-phoenix-1.oraclecloud.com/api/#/en/iaas/20160918/EgressSecurityRule/)
 * `ingress_security_rules` - (Required) Rules for allowing ingress IP packets. [IngressSecurityRule API Docs](https://docs.us-phoenix-1.oraclecloud.com/api/#/en/iaas/20160918/IngressSecurityRule/)
-* `vcn_id` - (Required) The OCID of the VCN the security list belongs to.
 
 ## Attributes Reference
 

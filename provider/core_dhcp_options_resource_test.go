@@ -83,7 +83,7 @@ func (s *ResourceCoreDHCPOptionsTestSuite) SetupTest() {
 	}
 
 	resource "oci_core_dhcp_options" "default" {
-		default_id = "${oci_core_virtual_network.t.default_dhcp_options_id}"
+		manage_default_resource_id = "${oci_core_virtual_network.t.default_dhcp_options_id}"
 		options {
 			type = "DomainNameServer"
 			server_type = "CustomDnsServer"
