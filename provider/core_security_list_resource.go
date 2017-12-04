@@ -207,8 +207,8 @@ func (s *SecurityListResourceCrud) State() string {
 func (s *SecurityListResourceCrud) Create() (e error) {
 	// If we are creating a default resource, then don't have to
 	// actually create it. Just set the ID and update it.
-	if defaultId := s.D.Get("manage_default_resource_id").(string); defaultId != "" {
-		s.D.SetId(defaultId)
+	if defaultId, ok := s.D.GetOk("manage_default_resource_id"); ok {
+		s.D.SetId(defaultId.(string))
 		e = s.Update()
 		return
 	}
@@ -235,7 +235,7 @@ func (s *SecurityListResourceCrud) Get() (e error) {
 		// we need to assume that the parent resource will remove it
 		// and notify terraform of it. Otherwise, terraform will
 		// see that the resource is still available and error out
-		if s.D.Get("manage_default_resource_id") != "" &&
+		if _, ok := s.D.GetOk("manage_default_resource_id"); ok &&
 			s.D.Get("state") == baremetal.ResourceTerminated {
 			s.Res.State = baremetal.ResourceTerminated
 		}
@@ -303,7 +303,7 @@ func (s *SecurityListResourceCrud) SetData() {
 }
 
 func (s *SecurityListResourceCrud) Delete() (e error) {
-	if s.D.Get("manage_default_resource_id") != "" {
+	if _, ok := s.D.GetOk("manage_default_resource_id"); ok {
 		// We can't actually delete a default resource.
 		// Instead, mark it as deleted.
 		s.D.Set("state", baremetal.ResourceTerminated)
