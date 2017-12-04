@@ -22,6 +22,16 @@ type ResourceCoreRouteTableTestSuite struct {
 	DefaultResourceName string
 }
 
+var defaultRouteTable = `
+resource "oci_core_route_table" "default" {
+	manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
+	route_rules {
+		cidr_block = "0.0.0.0/0"
+		network_entity_id = "${oci_core_internet_gateway.internet-gateway1.id}"
+	}
+}
+`
+
 func (s *ResourceCoreRouteTableTestSuite) SetupTest() {
 	s.Client = testAccClient
 	s.Provider = testAccProvider
@@ -133,6 +143,21 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 					resource.TestCheckResourceAttr(s.DefaultResourceName, "route_rules.#", "2"),
 					resource.TestCheckResourceAttr(s.DefaultResourceName, "route_rules.0.cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(s.DefaultResourceName, "route_rules.1.cidr_block", "10.0.0.0/8"),
+				),
+			},
+			// verify default resource delete
+			{
+				Config: s.Config,
+				Check:  nil,
+			},
+			// verify adding the default resource back to the config
+			{
+				Config: s.Config + defaultRouteTable,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(s.DefaultResourceName, "display_name"),
+					resource.TestCheckResourceAttrSet(s.DefaultResourceName, "route_rules.0.network_entity_id"),
+					resource.TestCheckResourceAttr(s.DefaultResourceName, "route_rules.#", "1"),
+					resource.TestCheckResourceAttr(s.DefaultResourceName, "route_rules.0.cidr_block", "0.0.0.0/0"),
 				),
 			},
 		},
