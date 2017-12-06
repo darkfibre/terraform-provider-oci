@@ -12,6 +12,63 @@ import (
 	"github.com/oracle/terraform-provider-oci/crud"
 )
 
+func DefaultRouteTableResource() *schema.Resource {
+	return &schema.Resource{
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		Timeouts: crud.DefaultTimeout,
+		Create:   createRouteTable,
+		Read:     readRouteTable,
+		Update:   updateRouteTable,
+		Delete:   deleteRouteTable,
+		Schema: map[string]*schema.Schema{
+			"display_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"manage_default_resource_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"route_rules": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr_block": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"network_entity_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"time_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"time_created": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
 func RouteTableResource() *schema.Resource {
 	return &schema.Resource{
 		Importer: &schema.ResourceImporter{
@@ -24,10 +81,9 @@ func RouteTableResource() *schema.Resource {
 		Delete:   deleteRouteTable,
 		Schema: map[string]*schema.Schema{
 			"compartment_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -37,12 +93,6 @@ func RouteTableResource() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"manage_default_resource_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"compartment_id", "vcn_id"},
-				ForceNew:      true,
 			},
 			"route_rules": {
 				Type:     schema.TypeList,
@@ -73,10 +123,9 @@ func RouteTableResource() *schema.Resource {
 				Computed: true,
 			},
 			"vcn_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}

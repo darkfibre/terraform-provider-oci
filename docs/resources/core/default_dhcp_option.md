@@ -1,21 +1,21 @@
-# oci\_core\_dhcp\_option
+# oci\_core\_default\_dhcp\_options
 
 [DhcpOptions Reference][82b94f0a]
 
   [82b94f0a]: https://docs.us-phoenix-1.oraclecloud.com/api/#/en/iaas/20160918/DhcpOptions/ "DhcpOptionsReference"
 
-Provide a DHCP options resource.
+Configures a VCN's default DHCP options resource.
 
 For more information, see
 [DNS in Your Virtual Cloud Network](https://docs.us-phoenix-1.oraclecloud.com/Content/Network/Concepts/dns.htm)
 
+For more information on default resources, see [Managing Default VCN Resources](https://github.com/oracle/terraform-provider-oci/blob/master/docs/Managing%20Default%20Resources.md)
 ## Example Usage
 
 #### VCN Local with Internet
 ```
-resource "oci_core_dhcp_options" "dhcp-options1" {
-  compartment_id = "${var.compartment_ocid}"
-  vcn_id = "${var.vcn_ocid}"
+resource "oci_core_default_dhcp_options" "dhcp-options1" {
+  manage_default_resource_id = "id of VCN's default DHCP options"
   display_name = "dhcp-options1"
 
   // required
@@ -35,9 +35,8 @@ resource "oci_core_dhcp_options" "dhcp-options1" {
 #### Custom DNS Server
 
 ```
-resource "oci_core_dhcp_options" "dhcp-options2" {
-  compartment_id = "${var.compartment_ocid}"
-  vcn_id = "${var.vcn_ocid}"
+resource "oci_core_default_dhcp_options" "dhcp-options2" {
+  manage_default_resource_id = "id of VCN's default security list"
   display_name = "dhcp-options3"
 
   // required
@@ -59,16 +58,13 @@ resource "oci_core_dhcp_options" "dhcp-options2" {
 
 The following arguments are supported:
 
-* `compartment_id` - (Required) The OCID of the compartment.
-* `vcn_id` - (Required) The OCID of the VCN.
+* `manage_default_resource_id` - (Required) The OCID of a [default DHCP option resource](https://github.com/oracle/terraform-provider-oci/blob/master/docs/Managing%20Default%20Resources.md) to manage.
 * `display_name` - (Optional) A user-friendly name. Does not have to be unique, and it's changeable. Avoid entering confidential information.
 * `options` - (Required) A set of [DHCP Options](https://docs.us-phoenix-1.oraclecloud.com/api/#/en/iaas/20160918/DhcpDnsOption/).
 
 ## Attributes Reference
-* `compartment_id` - The OCID of the compartment containing the set of DHCP options.
 * `display_name` - A user-friendly name. Does not have to be unique, and it's changeable. Avoid entering confidential information.
 * `id` - Oracle ID (OCID) for the set of DHCP options.
 * `state` - The DRG's current state. Allowed values are: [PROVISIONING, AVAILABLE, TERMINATING, TERMINATED]
 * `options` - The collection of individual DHCP options.
 * `time_created` - The date and time the set of DHCP options was created, in the format defined by RFC3339. Example: `2016-08-25T21:10:29.600Z`.
-* `vcn_id` - (Required) The OCID of the VCN the set of DHCP options belongs to.

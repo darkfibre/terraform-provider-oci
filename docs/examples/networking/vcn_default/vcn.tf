@@ -13,41 +13,41 @@ provider "oci" {
   region = "${var.region}"
 }
 
-resource "oci_core_virtual_network" "vcn1" {
+resource "oci_core_virtual_network" "tf-vcn1" {
   cidr_block = "10.0.0.0/16"
   dns_label = "vcn1"
   compartment_id = "${var.compartment_ocid}"
-  display_name = "vcn1"
+  display_name = "tf-vcn1"
 }
 
-resource "oci_core_internet_gateway" "ig1" {
+resource "oci_core_internet_gateway" "tf-ig1" {
   compartment_id = "${var.compartment_ocid}"
-  display_name = "ig1"
-  vcn_id = "${oci_core_virtual_network.vcn1.id}"
+  display_name = "tf-ig1"
+  vcn_id = "${oci_core_virtual_network.tf-vcn1.id}"
 }
 
-resource "oci_core_route_table" "default-route-table" {
-  manage_default_resource_id = "${oci_core_virtual_network.vcn1.default_route_table_id}"
-  display_name = "default-route-table"
+resource "oci_core_default_route_table" "tf-default-route-table" {
+  manage_default_resource_id = "${oci_core_virtual_network.tf-vcn1.default_route_table_id}"
+  display_name = "tf-default-route-table"
   route_rules {
     cidr_block = "0.0.0.0/0"
-    network_entity_id = "${oci_core_internet_gateway.ig1.id}"
+    network_entity_id = "${oci_core_internet_gateway.tf-ig1.id}"
   }
 }
 
-resource "oci_core_route_table" "route-table1" {
+resource "oci_core_route_table" "tf-route-table1" {
   compartment_id = "${var.compartment_ocid}"
-  vcn_id = "${oci_core_virtual_network.vcn1.id}"
-  display_name = "route-table1"
+  vcn_id = "${oci_core_virtual_network.tf-vcn1.id}"
+  display_name = "tf-route-table1"
   route_rules {
     cidr_block = "0.0.0.0/0"
-    network_entity_id = "${oci_core_internet_gateway.ig1.id}"
+    network_entity_id = "${oci_core_internet_gateway.tf-ig1.id}"
   }
 }
 
-resource "oci_core_dhcp_options" "default-dhcp-options" {
-  manage_default_resource_id = "${oci_core_virtual_network.vcn1.default_dhcp_options_id}"
-  display_name = "default-dhcp-options"
+resource "oci_core_default_dhcp_options" "tf-default-dhcp-options" {
+  manage_default_resource_id = "${oci_core_virtual_network.tf-vcn1.default_dhcp_options_id}"
+  display_name = "tf-default-dhcp-options"
 
   // required
   options {
@@ -62,10 +62,10 @@ resource "oci_core_dhcp_options" "default-dhcp-options" {
   }
 }
 
-resource "oci_core_dhcp_options" "dhcp-options1" {
+resource "oci_core_dhcp_options" "tf-dhcp-options1" {
   compartment_id = "${var.compartment_ocid}"
-  vcn_id = "${oci_core_virtual_network.vcn1.id}"
-  display_name = "dhcp-options1"
+  vcn_id = "${oci_core_virtual_network.tf-vcn1.id}"
+  display_name = "tf-dhcp-options1"
 
   // required
   options {
@@ -80,9 +80,9 @@ resource "oci_core_dhcp_options" "dhcp-options1" {
   }
 }
 
-resource "oci_core_security_list" "default-security-list" {
-  manage_default_resource_id = "${oci_core_virtual_network.vcn1.default_security_list_id}"
-  display_name = "default-security-list"
+resource "oci_core_default_security_list" "tf-default-security-list" {
+  manage_default_resource_id = "${oci_core_virtual_network.tf-vcn1.default_security_list_id}"
+  display_name = "tf-default-security-list"
 
   // allow outbound tcp traffic on all ports
   egress_security_rules {

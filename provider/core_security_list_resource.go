@@ -45,7 +45,7 @@ var icmpSchema = &schema.Schema{
 	},
 }
 
-func SecurityListResource() *schema.Resource {
+func DefaultSecurityListResource() *schema.Resource {
 	return &schema.Resource{
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -56,12 +56,6 @@ func SecurityListResource() *schema.Resource {
 		Update:   updateSecurityList,
 		Delete:   deleteSecurityList,
 		Schema: map[string]*schema.Schema{
-			"compartment_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
-			},
 			"display_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -96,10 +90,94 @@ func SecurityListResource() *schema.Resource {
 				Computed: true,
 			},
 			"manage_default_resource_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"compartment_id", "vcn_id"},
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"ingress_security_rules": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"icmp_options": icmpSchema,
+						"protocol": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"source": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"tcp_options": transportSchema,
+						"udp_options": transportSchema,
+						"stateless": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"time_created": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func SecurityListResource() *schema.Resource {
+	return &schema.Resource{
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		Timeouts: crud.DefaultTimeout,
+		Create:   createSecurityList,
+		Read:     readSecurityList,
+		Update:   updateSecurityList,
+		Delete:   deleteSecurityList,
+		Schema: map[string]*schema.Schema{
+			"compartment_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"display_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"egress_security_rules": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"icmp_options": icmpSchema,
+						"protocol": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"tcp_options": transportSchema,
+						"udp_options": transportSchema,
+						"stateless": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ingress_security_rules": {
 				Type:     schema.TypeList,
@@ -134,10 +212,9 @@ func SecurityListResource() *schema.Resource {
 				Computed: true,
 			},
 			"vcn_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: crud.DefaultResourceSuppressDiff,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}

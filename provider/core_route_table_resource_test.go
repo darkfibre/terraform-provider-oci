@@ -23,7 +23,7 @@ type ResourceCoreRouteTableTestSuite struct {
 }
 
 var defaultRouteTable = `
-resource "oci_core_route_table" "default" {
+resource "oci_core_default_route_table" "default" {
 	manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
 	route_rules {
 		cidr_block = "0.0.0.0/0"
@@ -50,7 +50,7 @@ func (s *ResourceCoreRouteTableTestSuite) SetupTest() {
 		}`
 
 	s.ResourceName = "oci_core_route_table.t"
-	s.DefaultResourceName = "oci_core_route_table.default"
+	s.DefaultResourceName = "oci_core_default_route_table.default"
 }
 
 func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() {
@@ -67,7 +67,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 						vcn_id = "${oci_core_virtual_network.t.id}"
 					}
 
-					resource "oci_core_route_table" "default" {
+					resource "oci_core_default_route_table" "default" {
 						manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
 					}`,
 				Check: resource.ComposeTestCheckFunc(
@@ -87,14 +87,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 							cidr_block = "0.0.0.0/0"
 							network_entity_id = "${oci_core_internet_gateway.internet-gateway1.id}"
 						}
-					}
-					resource "oci_core_route_table" "default" {
-						manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
-						route_rules {
-							cidr_block = "0.0.0.0/0"
-							network_entity_id = "${oci_core_internet_gateway.internet-gateway1.id}"
-						}
-					}`,
+					}` + defaultRouteTable,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(s.ResourceName, "display_name"),
 					resource.TestCheckResourceAttrSet(s.ResourceName, "route_rules.0.network_entity_id"),
@@ -122,7 +115,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 							network_entity_id = "${oci_core_internet_gateway.internet-gateway1.id}"
 						}
 					}
-					resource "oci_core_route_table" "default" {
+					resource "oci_core_default_route_table" "default" {
 						manage_default_resource_id = "${oci_core_virtual_network.t.default_route_table_id}"
 						display_name = "default-tf-route-table"
 						route_rules {

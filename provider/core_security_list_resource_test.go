@@ -24,7 +24,7 @@ type ResourceCoreSecurityListTestSuite struct {
 }
 
 var defaultSecurityList = `
-resource "oci_core_security_list" "default" {
+resource "oci_core_default_security_list" "default" {
 	manage_default_resource_id = "${oci_core_virtual_network.t.default_security_list_id}"
 	display_name = "default-tf-security_list"
 	egress_security_rules = [{
@@ -72,7 +72,7 @@ func (s *ResourceCoreSecurityListTestSuite) SetupTest() {
 			display_name = "-tf-vcn"
 		}`
 	s.ResourceName = "oci_core_security_list.t"
-	s.DefaultResourceName = "oci_core_security_list.default"
+	s.DefaultResourceName = "oci_core_default_security_list.default"
 }
 
 func (s *ResourceCoreSecurityListTestSuite) TestAccResourceCoreSecurityList_basic() {
@@ -172,7 +172,7 @@ func (s *ResourceCoreSecurityListTestSuite) TestAccResourceCoreSecurityList_basi
 						}]
 					}
 
-					resource "oci_core_security_list" "default" {
+					resource "oci_core_default_security_list" "default" {
 						manage_default_resource_id = "${oci_core_virtual_network.t.default_security_list_id}"
 						display_name = "default-tf-security_list-updated"
 						egress_security_rules = [{
@@ -261,7 +261,7 @@ func (s *ResourceCoreSecurityListTestSuite) TestAccResourceCoreSecurityList_basi
 						ingress_security_rules = []
 					}
 
-					resource "oci_core_security_list" "default" {
+					resource "oci_core_default_security_list" "default" {
 						manage_default_resource_id = "${oci_core_virtual_network.t.default_security_list_id}"
 						display_name = "default-tf-security_list-updated"
 						egress_security_rules = []
