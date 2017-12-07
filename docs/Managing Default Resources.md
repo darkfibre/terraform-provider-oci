@@ -17,9 +17,9 @@ Their OCIDs are returned by the following attributes under the `oci_core_virtual
 Default resources must be configured in Terraform using a separate resource type. Here are
 the mappings between the resource and the new resource type to use for configuring default
 resources:
-- `oci_core_security_list` => [oci_core_default_security_list](https://github.com/oracle/terraform-provider-oci/blob/master/docs/resources/core/default_security_list.md)
-- `oci_core_dhcp_options` => [oci_core_default_dhcp_options](https://github.com/oracle/terraform-provider-oci/blob/master/docs/resources/core/default_dhcp_option.md)
-- `oci_core_route_table` => [oci_core_default_route_table](https://github.com/oracle/terraform-provider-oci/blob/master/docs/resources/core/default_route_table.md)
+- `oci_core_security_list` => `oci_core_default_security_list`
+- `oci_core_dhcp_options` => `oci_core_default_dhcp_options`
+- `oci_core_route_table` => `oci_core_default_route_table`
 
 Default resources types are configured in the same way as their non-default counterparts. 
 The only difference is specifying the ID of the default resource using the

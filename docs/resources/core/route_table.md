@@ -6,6 +6,9 @@
 
 Provide a route table resource.
 
+For more information on configuring a VCN's default route table, 
+see [Managing Default VCN Resources](https://github.com/oracle/terraform-provider-oci/blob/master/docs/Managing%20Default%20Resources.md)
+
 ## Example Usage
 
 ```

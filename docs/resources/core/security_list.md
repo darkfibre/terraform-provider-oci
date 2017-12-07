@@ -8,6 +8,9 @@ Provides a security list resource.
 See the [Security Lists](https://docs.us-phoenix-1.oraclecloud.com/Content/Network/Concepts/securitylists.htm)
 overview for more information.
 
+For more information on configuring a VCN's default security list, 
+see [Managing Default VCN Resources](https://github.com/oracle/terraform-provider-oci/blob/master/docs/Managing%20Default%20Resources.md)
+
 ## Example Usage
 
 Protocols are specified as protocol numbers. For information about protocol numbers, see
