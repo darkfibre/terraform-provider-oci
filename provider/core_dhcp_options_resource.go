@@ -230,9 +230,10 @@ func (s *DHCPOptionsResourceCrud) Get() (e error) {
 		// we need to assume that the parent resource will remove it
 		// and notify terraform of it. Otherwise, terraform will
 		// see that the resource is still available and error out
+		deleteTargetState := s.DeletedTarget()[0]
 		if _, ok := s.D.GetOk("manage_default_resource_id"); ok &&
-			s.D.Get("state") == baremetal.ResourceTerminated {
-			s.Res.State = baremetal.ResourceTerminated
+			s.D.Get("state") == deleteTargetState {
+			s.Res.State = deleteTargetState
 		}
 	}
 	return
@@ -266,11 +267,26 @@ func (s *DHCPOptionsResourceCrud) SetData() {
 	s.D.Set("time_created", s.Res.TimeCreated.String())
 }
 
+func (s *DHCPOptionsResourceCrud) reset() (e error) {
+	opts := &baremetal.UpdateDHCPDNSOptions{
+		Options: []baremetal.DHCPDNSOption{
+			{
+				Type:       "DomainNameServer",
+				ServerType: "VcnLocalPlusInternet",
+			},
+		},
+	}
+
+	_, e = s.Client.UpdateDHCPOptions(s.D.Id(), opts)
+	return
+}
+
 func (s *DHCPOptionsResourceCrud) Delete() (e error) {
 	if _, ok := s.D.GetOk("manage_default_resource_id"); ok {
 		// We can't actually delete a default resource.
-		// Instead, mark it as deleted.
-		s.D.Set("state", baremetal.ResourceTerminated)
+		// Clear out its settings and mark it as deleted.
+		e = s.reset()
+		s.D.Set("state", s.DeletedTarget()[0])
 		return
 	}
 

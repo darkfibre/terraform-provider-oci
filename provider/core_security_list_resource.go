@@ -312,9 +312,10 @@ func (s *SecurityListResourceCrud) Get() (e error) {
 		// we need to assume that the parent resource will remove it
 		// and notify terraform of it. Otherwise, terraform will
 		// see that the resource is still available and error out
+		deleteTargetState := s.DeletedTarget()[0]
 		if _, ok := s.D.GetOk("manage_default_resource_id"); ok &&
-			s.D.Get("state") == baremetal.ResourceTerminated {
-			s.Res.State = baremetal.ResourceTerminated
+			s.D.Get("state") == deleteTargetState {
+			s.Res.State = deleteTargetState
 		}
 	}
 	return
@@ -379,11 +380,22 @@ func (s *SecurityListResourceCrud) SetData() {
 	s.D.Set("vcn_id", s.Res.VcnID)
 }
 
+func (s *SecurityListResourceCrud) reset() (e error) {
+	opts := &baremetal.UpdateSecurityListOptions{
+		IngressRules: []baremetal.IngressSecurityRule{},
+		EgressRules:  []baremetal.EgressSecurityRule{},
+	}
+
+	_, e = s.Client.UpdateSecurityList(s.D.Id(), opts)
+	return
+}
+
 func (s *SecurityListResourceCrud) Delete() (e error) {
 	if _, ok := s.D.GetOk("manage_default_resource_id"); ok {
 		// We can't actually delete a default resource.
-		// Instead, mark it as deleted.
-		s.D.Set("state", baremetal.ResourceTerminated)
+		// Clear out its settings and mark it as deleted.
+		e = s.reset()
+		s.D.Set("state", s.DeletedTarget()[0])
 		return
 	}
 

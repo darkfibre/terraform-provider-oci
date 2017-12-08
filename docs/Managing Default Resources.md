@@ -62,7 +62,7 @@ For more detailed examples, refer to [docs/examples/networking/vcn_default](http
 
 Default resources can only be removed when the associated `oci_core_virtual_network resource` is removed. When attempting
 a targeted removal of a default resource, the resource will be removed from the Terraform state file but the resource may
-still exist in OCI in an indeterminate state.
+still exist in OCI with empty settings.
  
 Examples of targeted removal include:
 - Removing a default resource from a Terraform configuration that was previously applied
