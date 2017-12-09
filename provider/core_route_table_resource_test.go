@@ -56,6 +56,7 @@ func (s *ResourceCoreRouteTableTestSuite) TestAccResourceCoreRouteTable_basic() 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(s.ResourceName, "display_name"),
 					resource.TestCheckResourceAttr(s.ResourceName, "route_rules.#", "0"),
+					resource.TestCheckResourceAttrSet(s.ResourceName, "vcn_id"),
 				),
 			},
 			// verify add rule
