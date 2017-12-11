@@ -184,6 +184,7 @@ func (s *DHCPOptionsResourceCrud) SetData() {
 
 	s.D.Set("state", s.Res.State)
 	s.D.Set("time_created", s.Res.TimeCreated.String())
+	s.D.Set("vcn_id", s.Res.VcnID)
 }
 
 func (s *DHCPOptionsResourceCrud) Delete() (e error) {
